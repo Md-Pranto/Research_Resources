@@ -68,7 +68,24 @@ This creates a feedback-driven system where unfairness automatically triggers co
 
 ## Repository Structure
 
-### Main Algorithm
+```
+Research_Resources/
+├── Code/                           # Python source code for algorithms and runners
+│   ├── EED_RR.py                   # Standard implementation of the EED-RR algorithm
+│   ├── EED_RR_Ablation.py          # Modular version for ablation studies (Base, +JFI, +Deficit, Full)
+│   ├── ADRR.py                     # Adaptive Dynamic Round Robin baseline
+│   ├── ElvHLVQRR.py                # Enhanced Low Variance High-Low Variance Quantum RR baseline
+│   ├── Median_average.py           # Mean-Median Modulo Round Robin (MMMRR) baseline
+│   ├── scheduler_runners.py        # Optimized runners for large-scale evaluation (10,000+ processes)
+│   └── generate_process_data.py    # Synthetic dataset generator with realistic distributions
+├── Image/                          # Generated plots and visualization assets
+├── cpu_scheduling_benchmark.ipynb  # Complete evaluation pipeline and Jupyter Notebook
+├── process_data.csv                # Synthesized benchmark dataset (10,000 processes)
+├── scheduling_data.csv             # Source Kaggle scheduling scenarios dataset
+└── README.md                       # Project documentation
+```
+
+### Main Algorithm (in `Code/`)
 
 * `EED_RR.py`
   Standard implementation of the EED-RR algorithm
@@ -77,7 +94,7 @@ This creates a feedback-driven system where unfairness automatically triggers co
   Modular version for ablation studies (Base, +JFI, +Deficit, Full)
 
 
-### Baselines and Comparisons
+### Baselines and Comparisons (in `Code/`)
 
 * `ADRR.py`
   Adaptive Dynamic Round Robin
@@ -95,7 +112,7 @@ This creates a feedback-driven system where unfairness automatically triggers co
 
 ### Data and Evaluation
 
-* `cpu_scheduling_benchmark.ipynb`
+* `cpu_scheduling_benchmark.ipynb` (Root directory)
   Complete evaluation pipeline including:
 
   * Dataset partitioning
@@ -104,10 +121,10 @@ This creates a feedback-driven system where unfairness automatically triggers co
   * Effect size calculation (Cohen’s d)
   * Visualization (heatmaps, bar charts)
 
-* `generate_process_data.py`
+* `generate_process_data.py` (in `Code/`)
   Synthetic dataset generator with realistic distributions
 
-* `process_data.csv`, `scheduling_data.csv`
+* `process_data.csv`, `scheduling_data.csv` (Root directory)
   Benchmark datasets
 
 ---

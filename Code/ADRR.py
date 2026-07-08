@@ -1,33 +1,10 @@
-# ------------------------------------------------------------------------------
-# ADRR with YOUR Jain's Fairness Index (Efficiency Ratio)
-# Now uses xi = acc_cpu / (acc_cpu + acc_wait)  ← same as FRD-RR
-# ------------------------------------------------------------------------------
+# ADRR Scheduling Algorithm
 
 def calculate_mean(lst):
     return sum(lst) / len(lst) if lst else 0
 
 
-# YOUR Jain's Fairness Index (Efficiency ratio) - same as FRD-RR
-def calculate_jains_fairness_index(acc_cpu, acc_wait, processes):
-    n = len(processes)
-    if n == 0:
-        return 1.0
-    xi_list = []
-    for p in processes:
-        name = p[0]
-        cpu = acc_cpu.get(name, 0)
-        wait = acc_wait.get(name, 0)
-        xi = cpu / (cpu + wait) if (cpu + wait) > 0 else 0.5
-        xi_list.append(xi)
-
-    sum_xi = sum(xi_list)
-    sum_xi_squared = sum(x * x for x in xi_list)
-    if sum_xi_squared == 0:
-        return 1.0
-    return (sum_xi * sum_xi) / (n * sum_xi_squared)
-
-
-print("=== ADRR Scheduling (using YOUR efficiency JFI) ===")
+print("=== ADRR Scheduling ===")
 
 # ---------------- INPUT ----------------
 n = int(input("Enter number of processes: "))
@@ -54,17 +31,11 @@ base_tq = calculate_mean(sorted_bt)
 # ---------------- INITIALIZATION ----------------
 remaining = {}
 completion = {}
-acc_cpu = {}
-acc_wait = {}  # ← needed for YOUR JFI
-last_end_time = {}
 
 for p in processes:
     name = p[0]
     remaining[name] = p[2]
     completion[name] = 0
-    acc_cpu[name] = 0
-    acc_wait[name] = 0
-    last_end_time[name] = p[1]
 
 time = 0
 queue = []
@@ -85,10 +56,6 @@ while completed < n:
     current = queue.pop(0)
     name = current[0]
 
-    # Waiting time accumulation (required for YOUR JFI)
-    wait_increment = time - last_end_time[name]
-    acc_wait[name] += wait_increment
-
     # Elastic TQ
     pred_bt = current[3]
     try:
@@ -102,8 +69,6 @@ while completed < n:
     start = time
     time += elastic_tq
     remaining[name] -= elastic_tq
-    acc_cpu[name] += elastic_tq
-    last_end_time[name] = time
 
     while index < n and processes[index][1] <= time:
         queue.append(processes[index])

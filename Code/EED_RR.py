@@ -1,9 +1,5 @@
 # ------------------------------------------------------------------------------
-# Efficiency-Enhanced Dynamic Round Robin Scheduling With Jain's Index and Deficit Based Elastic Time Quantum (EED-RR) - Simple Version
-# Same coding style as your standard RR code
-# Uses Jain's Fairness Index to dynamically adjust time quantum per process
-# Goal: Give more CPU time to starved processes (long burst ones) when fairness is low
-# Now adds: Average Turnaround Time (ATT), Context Switches (CS), and Final Fairness Index (JFI)
+# Efficiency-Enhanced Dynamic Round Robin Scheduling With Jain's Index and Deficit Based Elastic Time Quantum (EED-RR)
 # ------------------------------------------------------------------------------
 from collections import deque
 
@@ -125,7 +121,7 @@ while completed < n:
     name = current[0]
     arrival = current[1]
     
-    # --- Incremental JFI update: waiting time is about to change ---
+    
     cpu_i = acc_cpu[name]
     wait_i = acc_wait[name]
     x_old = cpu_i / (cpu_i + wait_i) if (cpu_i + wait_i) > 0 else 0.5
@@ -137,11 +133,11 @@ while completed < n:
     wait_i_new = acc_wait[name]
     x_new = cpu_i / (cpu_i + wait_i_new) if (cpu_i + wait_i_new) > 0 else 0.5
     
-    # Update running sums after wait change (O(1) instead of O(n))
+
     sum_x  += (x_new - x_old)
     sum_x2 += (x_new * x_new - x_old * x_old)
     
-    # Jain's Fairness Index from running accumulators (O(1))
+
     j_current = (sum_x * sum_x) / (n * sum_x2) if sum_x2 > 0 else 1.0
     
     # Average xi and this process's xi (O(1))
@@ -154,12 +150,11 @@ while completed < n:
         beta = (avg_xi - my_xi) / avg_xi
     
     # Calculate elastic time quantum for this process
-    scaling_factor = 1.5  # You can change this (e.g. 1.0, 2.0, 2.5, 3.0) to see how elasticity impacts results
+    scaling_factor = 1.5
     elastic_tq = tq_base * (1 + (1 - j_current) * beta * scaling_factor)
     if elastic_tq > remaining[name]:
         elastic_tq = remaining[name]
     
-    # --- Incremental JFI update: CPU time is about to change ---
     x_old2 = x_new
     
     # Run the process
@@ -169,7 +164,6 @@ while completed < n:
     remaining[name] -= elastic_tq
     last_end_time[name] = time   # update last end time
     
-    # Update running sums after CPU change (O(1))
     cpu_i_after = acc_cpu[name]
     wait_i_after = acc_wait[name]
     x_new2 = cpu_i_after / (cpu_i_after + wait_i_after) if (cpu_i_after + wait_i_after) > 0 else 0.5
@@ -213,7 +207,7 @@ for p in processes:
 
 print("\nAverage Waiting Time:", total_wait / n if n > 0 else 0)
 
-# New: Average Turnaround Time (ATT)
+# Average Turnaround Time (ATT)
 total_turnaround = 0
 # print("\nTurnaround Time:")
 for p in processes:
@@ -228,8 +222,5 @@ for p in processes:
 
 print("\nAverage Turnaround Time:", total_turnaround / n if n > 0 else 0)
 
-# New: Context Switches
+# Context Switches
 print("\nContext Switches:", context_switches)
-
-print("\nNote: You can compare this with your standard RR code using same input.")
-print("EED-RR should give lower AWT when there are long and short processes.")

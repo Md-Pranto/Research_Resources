@@ -1,9 +1,7 @@
-# ------------------------------------------------------------------------------
 # Modified Median Mean Round Robin (MMMRR)
 # TQ per cycle = (Median + Mean of CURRENT remaining bursts) / 2
 # Clean Output Version (Comparison Ready)
-# Prints only: AWT, ATT, Context Switches, Final JFI
-# ------------------------------------------------------------------------------
+# Prints only: AWT, ATT, Context Switches
 
 def calculate_mean(lst):
     if len(lst) == 0:
@@ -23,36 +21,6 @@ def calculate_median(lst):
         return sorted_lst[n // 2]
     else:
         return (sorted_lst[n//2 - 1] + sorted_lst[n//2]) / 2
-
-
-# Jain Fairness Index (efficiency-based)
-def calculate_jfi(acc_cpu_dict, wait_dict, process_names):
-    n = len(process_names)
-    if n == 0:
-        return 1.0
-
-    xi_list = []
-    for name in process_names:
-        cpu = acc_cpu_dict.get(name, 0)
-        wait = wait_dict.get(name, 0)
-
-        if cpu + wait == 0:
-            xi = 0.5
-        else:
-            xi = cpu / (cpu + wait)
-
-        xi_list.append(xi)
-
-    s1 = 0
-    s2 = 0
-    for xi in xi_list:
-        s1 += xi
-        s2 += xi * xi
-
-    if s2 == 0:
-        return 1.0
-
-    return (s1 * s1) / (n * s2)
 
 
 
@@ -81,17 +49,11 @@ for i in range(n):
 
 remaining = {}
 completion = {}
-acc_cpu = {}
-acc_wait = {}
-last_end = {}
 
 for p in processes:
     name = p[0]
     remaining[name] = p[2]
     completion[name] = 0
-    acc_cpu[name] = 0
-    acc_wait[name] = 0
-    last_end[name] = p[1]
 
 
 time = 0
@@ -137,16 +99,10 @@ while completed < n:
     current = queue.pop(0)
     name = current[0]
 
-    # Waiting increment
-    wait_inc = time - last_end[name]
-    acc_wait[name] += wait_inc
-
     run_time = time_quantum if remaining[name] > time_quantum else remaining[name]
 
     time += run_time
-    acc_cpu[name] += run_time
     remaining[name] -= run_time
-    last_end[name] = time
 
     while index < n and processes[index][1] <= time:
         queue.append(processes[index])
@@ -188,8 +144,5 @@ print("\nAverage Turnaround Time:", total_tat / n if n > 0 else 0)
 
 print("\nContext Switches:", context_switches)
 
-
-names = [p[0] for p in processes]
-final_jfi = calculate_jfi(acc_cpu, acc_wait, names)
 
 print("\nNote: Compare with Standard RR, FRD-RR, and ADRR using same input.")

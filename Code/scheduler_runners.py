@@ -1,6 +1,6 @@
 """
 In-process algorithm runners (same logic as .py files).
-Accepts process list [[name, arrival, burst], ...] and returns {AWT, ATT, CS, JFI}.
+Accepts process list [[name, arrival, burst], ...] and returns {AWT, ATT, CS}.
 Used for benchmark with 10k processes (faster than subprocess).
 """
 
@@ -40,9 +40,6 @@ def run_MMMRR(processes):
     n = len(processes)
     remaining = {p[0]: p[2] for p in processes}
     completion = {p[0]: 0 for p in processes}
-    acc_cpu = {p[0]: 0 for p in processes}
-    acc_wait = {p[0]: 0 for p in processes}
-    last_end = {p[0]: p[1] for p in processes}
     time, queue, completed, index, context_switches = 0, [], 0, 0, 0
     served_in_cycle = 0
     time_quantum = 1.0
@@ -61,12 +58,9 @@ def run_MMMRR(processes):
             served_in_cycle = 0
         current = queue.pop(0)
         name = current[0]
-        acc_wait[name] += time - last_end[name]
         run_time = min(time_quantum, remaining[name])
         time += run_time
-        acc_cpu[name] += run_time
         remaining[name] -= run_time
-        last_end[name] = time
         while index < n and processes[index][1] <= time:
             queue.append(processes[index])
             index += 1
@@ -95,9 +89,6 @@ def run_ADRR(processes):
     base_tq = _mean(sorted_bt)
     remaining = {p[0]: p[2] for p in processes}
     completion = {p[0]: 0 for p in processes}
-    acc_cpu = {p[0]: 0 for p in processes}
-    acc_wait = {p[0]: 0 for p in processes}
-    last_end = {p[0]: p[1] for p in processes}
     time, queue, completed, index, context_switches = 0, [], 0, 0, 0
 
     while completed < n:
@@ -109,7 +100,6 @@ def run_ADRR(processes):
             continue
         current = queue.pop(0)
         name = current[0]
-        acc_wait[name] += time - last_end[name]
         try:
             pos = sorted_bt.index(current[3])
         except ValueError:
@@ -117,8 +107,6 @@ def run_ADRR(processes):
         elastic_tq = min(base_tq + diff[pos], remaining[name])
         time += elastic_tq
         remaining[name] -= elastic_tq
-        acc_cpu[name] += elastic_tq
-        last_end[name] = time
         while index < n and processes[index][1] <= time:
             queue.append(processes[index])
             index += 1
@@ -187,15 +175,11 @@ def run_EED_RR(processes, scaling_factor=1.5):
 
 
 def run_ElvHLVQRR(processes):
-    """ElvHLVQRR.py logic fixed to match the EImHLVQTRR paper perfectly."""
     processes = [[p[0], float(p[1]), float(p[2])] for p in processes]
     processes.sort(key=lambda x: x[1])
     n = len(processes)
     remaining = {p[0]: p[2] for p in processes}
     completion = {p[0]: 0 for p in processes}
-    acc_cpu = {p[0]: 0 for p in processes}
-    acc_wait = {p[0]: 0 for p in processes}
-    last_end = {p[0]: p[1] for p in processes}
     time, completed, index, context_switches = 0, 0, 0, 0
     queue = deque()
 
@@ -227,8 +211,6 @@ def run_ElvHLVQRR(processes):
             current = queue.popleft()
             name = current[0]
             
-            acc_wait[name] += time - last_end[name]
-            
             # The paper's termination rule: if P(RBT) <= 1TQ *after* running for 1TQ
             # mathematically means if initial RBT <= 2 * TQ, it finishes in one go.
             if remaining[name] <= 2 * tq:
@@ -238,8 +220,6 @@ def run_ElvHLVQRR(processes):
                 
             time += run_time
             remaining[name] -= run_time
-            acc_cpu[name] += run_time
-            last_end[name] = time
             
             # Load arrivals during execution
             while index < n and processes[index][1] <= time:
